@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>آپلود فایل</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>آپلود فایل به سرور</h2>
+
+  <input type="file" id="fileInput"><br>
+  <input type="text" id="fileName" placeholder="نام فایل (اختیاری)"><br>
+
+  <button onclick="uploadFile()">آپلود</button>
+
+  <div id="status"></div>
+
+  <script>
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    async function uploadFile() {
+      const file = document.getElementById("fileInput").files[0];
+      const name = document.getElementById("fileName").value.trim() || file.name;
+      const status = document.getElementById("status");
+
+      if (!file) {
+        status.innerHTML = "لطفاً فایل انتخاب کن";
+        return;
+      }
+
+      status.innerHTML = "⏳ در حال آپلود...";
+
+      const base64 = await toBase64(file);
+
+      const res = await fetch("https://fiziktworker.arsham-fazel.workers.dev/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: name,
+          content: base64
+        })
+      });
+
+      if (!res.ok) {
+        status.innerHTML = "⚠️ خطا در آپلود";
+      } else {
+        status.innerHTML = "✅ آپلود شد";
+      }
+    }
+  </script>
+
+</body>
+</html>
